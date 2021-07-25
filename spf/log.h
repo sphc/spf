@@ -4,7 +4,7 @@
  * @Email        : jinkai0916@outlook.com
  * @Date         : 2021-07-24 21:53:08
  * @LastEditors  : sphc
- * @LastEditTime : 2021-07-25 18:12:35
+ * @LastEditTime : 2021-07-25 18:51:30
  */
 
 #ifndef SPF_LOG__H
@@ -70,18 +70,19 @@ namespace spf {
         void set_log_level(LogLevel level);
         LogLevel get_log_level() const;
 
-        void append_log_appender(LogAppender::ptr appender);
-        void erase_log_appender(LogAppender::ptr appender);
+        void add_appender(LogAppender::ptr appender);
+        void delete_appender(LogAppender::ptr appender);
 
-        void log(LogLevel level, const LogEvent &evelt);
-        void debug(const LogEvent &evelt);
-        void info(const LogEvent &evelt);
-        void warn(const LogEvent &evelt);
-        void error(const LogEvent &evelt);
-        void fatal(const LogEvent &evelt);
+        // TODO: 这些是否为只读函数
+        void log(LogLevel level, LogEvent::ptr event);
+        void debug(LogEvent::ptr event);
+        void info(LogEvent::ptr event);
+        void warn(LogEvent::ptr event);
+        void error(LogEvent::ptr event);
+        void fatal(LogEvent::ptr event);
     private:
-        LogLevel m_log_level = LogLevel::DEBUG;
-        std::list<LogAppender::ptr> m_log_appender_list;
+        LogLevel m_level = LogLevel::DEBUG;         // 日志级别高于或等于m_level才会被输出
+        std::list<LogAppender::ptr> m_appender_list;
     };
 }
 
