@@ -4,10 +4,11 @@
  * @Email        : jinkai0916@outlook.com
  * @Date         : 2021-07-25 18:12:57
  * @LastEditors  : sphc
- * @LastEditTime : 2021-07-25 18:52:27
+ * @LastEditTime : 2021-07-25 20:06:43
  */
 
 #include "log.h"
+#include <iostream>
 #include <algorithm>
 
 namespace spf {
@@ -48,12 +49,63 @@ namespace spf {
     std::int64_t LogEvent::get_time() const
     { return m_time; }
 
-    // Logger implementation
+    // LogAppender implementation
 
-    void Logger::set_log_level(LogLevel level)
+    void LogAppender::set_level(LogLevel level)
     { m_level = level; }
 
-    LogLevel Logger::get_log_level() const
+    LogLevel LogAppender::get_level() const
+    { return m_level; }
+
+    void LogAppender::set_formatter(LogFormatter::ptr formatter)
+    { m_formatter = formatter; }
+
+    LogFormatter::ptr LogAppender::get_formatter() const
+    { return m_formatter; }
+
+    LogAppender::~LogAppender() { }
+
+    // StdoutAppender implementation
+
+    void StdoutAppender::log(LogLevel level, LogEvent::ptr event)
+    {
+        if (level < m_level) {
+            return;
+        }
+        std::cout << m_formatter.format(event) << std::endl;
+    }
+
+    // FileAppender implementation
+
+    FileAppender::FileAppender(const std::string &file_name) :
+        // TODO: 文件打开异常处理
+        m_file_name(file_name), m_fstream(file_name)
+    { }
+
+    void FileAppender::log(LogLevel level, LogEvent::ptr event)
+    {
+        if (level < m_level) {
+            return;
+        }
+        m_fstream << m_formatter.format(event) << std::endl;
+    }
+
+    bool FileAppender::reopen()
+    {
+        if (m_fstream) {
+            m_fstream.close();
+        }
+        m_fstream.open(m_file_name);
+        // TODO: 查阅相关知识，不能被转换为bool，但能用于条件
+        return !!m_fstream;
+    }
+
+    // Logger implementation
+
+    void Logger::set_level(LogLevel level)
+    { m_level = level; }
+
+    LogLevel Logger::get_level() const
     { return m_level; }
 
     void Logger::add_appender(LogAppender::ptr appender)

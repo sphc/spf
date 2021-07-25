@@ -4,7 +4,7 @@
  * @Email        : jinkai0916@outlook.com
  * @Date         : 2021-07-24 21:53:08
  * @LastEditors  : sphc
- * @LastEditTime : 2021-07-25 18:51:30
+ * @LastEditTime : 2021-07-25 20:00:38
  */
 
 #ifndef SPF_LOG__H
@@ -12,6 +12,7 @@
 
 #include <list>
 #include <string>
+#include <fstream>
 #include <cstddef>
 #include <memory>
 
@@ -53,22 +54,56 @@ namespace spf {
         std::int64_t m_time;        // 时间戳
     };
 
-    class Formatter {};
+    class LogFormatter {
+    public:
+        using ptr = std::shared_ptr<LogFormatter>;
+
+        LogFormatter(const std::string &pattern);
+        std::string format(LogEvent::ptr event);
+
+    private:
+        std::string m_pattern;
+    };
 
     class LogAppender {
     public:
         using ptr = std::shared_ptr<LogAppender>;
 
-        virtual log(LogLevel level, const LogEvent &event) = 0;
-        virtual ~LogAppender() { }
+        void set_level(LogLevel level);
+        LogLevel get_level() const;
+        void set_formatter(LogFormatter::ptr formatter);
+        LogFormatter::ptr get_formatter() const;
+        // TODO: 是否只读函数
+        virtual void log(LogLevel level, LogEvent::ptr event) = 0;
+        virtual ~LogAppender();
+
+    protected:
+        LogLevel m_level = LogLevel::DEBUG;
+        LogFormatter::ptr m_formatter;
+    };
+
+    class StdoutAppender : public LogAppender {
+    public:
+        void log(LogLevel level, LogEvent::ptr event) override;
+    };
+
+    class FileAppender : public LogAppender {
+    public:
+        FileAppender(const std::string &file_name);
+
+        void log(LogLevel level, LogEvent::ptr event) override;
+        bool reopen();
+    private:
+        std::string m_file_name;
+        std::fstream m_fstream;
     };
 
     class Logger {
     public:
         using ptr = std::shared_ptr<Logger>;
 
-        void set_log_level(LogLevel level);
-        LogLevel get_log_level() const;
+        void set_level(LogLevel level);
+        LogLevel get_level() const;
 
         void add_appender(LogAppender::ptr appender);
         void delete_appender(LogAppender::ptr appender);
